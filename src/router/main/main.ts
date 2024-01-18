@@ -7,21 +7,6 @@ const prisma = new PrismaClient()
 
 const router = Router()
 
-router.use((req: Request, res: Response, next) => {
-    if(req.session.data === undefined){
-        req.session.data = {
-            login: false,
-            name: "",
-            id: ""
-        }
-    }
-    next()
-})
-
-router.get('/', (req, res) => {
-    res.send('Main Page')
-})
-
 router.get('/login', (req, res) => {
     if(req.session.data){
         if(req.session.data.login){
@@ -42,6 +27,7 @@ router.post('/login', async (req, res) => {
             res.sendStatus(403)
         }
         else{
+            console.log("Sucessfully login")
             req.session.data.login = true
             req.session.data.name = user.name
             req.session.data.id = user.userId
@@ -93,10 +79,6 @@ router.post('/logout', (req, res) => {
             res.redirect('/')
         }
     })
-})
-
-router.get('/info', (req, res) => {
-    res.render("info.ejs", {info: "Hello World"})
 })
 
 export default router
