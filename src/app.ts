@@ -24,7 +24,11 @@ const port: number = 4000
 const server = createServer(app)
 const io = initWebsocket(server)
 
-app.use(cors())
+app.use((req, res, next) => {
+    console.log(`Request: ${req.method} ${req.url} at ${new Date().toLocaleString()} from ${req.ip}`)
+    next()
+})
+app.use(cors({ origin: 'http://localhost:3000', credentials: true, methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', allowedHeaders: 'X-Requested-With,content-type'}))
 app.use(bodyParser.json())
 app.use(session({
     secret: "我好像可以用中文當密鑰",
@@ -37,8 +41,8 @@ app.set('view engine', 'ejs')
 app.set('views', './src/views')
 
 app.use(express.static('static'))
-app.use(main)
-app.get('/chat', chat)
+app.use("/", main)
+app.use('/chat', chat)
 
 let e: ErrorRequestHandler = (err, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack)

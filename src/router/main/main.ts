@@ -2,43 +2,86 @@ import { Router, Request, Response } from 'express'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { PrismaClient } from '@prisma/client'
+import session from 'express-session'
 const prisma = new PrismaClient()
 
 const router = Router()
+
+router.use((req: Request, res: Response, next) => {
+    if(req.session.data === undefined){
+        req.session.data = {
+            login: false,
+            name: "",
+            id: ""
+        }
+    }
+    next()
+})
 
 router.get('/', (req, res) => {
     res.send('Main Page')
 })
 
-router.post('/login', (req, res) => {
-    if(req.body.username === "admin" && req.body.password === "admin"){
+router.get('/login', (req, res) => {
+    if(req.session.data){
+        if(req.session.data.login){
+            res.sendStatus(200)
+        }
+        else{
+            res.sendStatus(403)
+        }
+    }
+})
+router.post('/login', async (req, res) => {
+    prisma.user.findFirst({ where: { email: req.body.email, password: req.body.password } })
+    .then((user) => {
         if(req.session.data === undefined){
             Error("Session not found")
         }
+        else if(user === null){
+            res.sendStatus(403)
+        }
         else{
             req.session.data.login = true
-            req.session.data.name = "admin"
-            req.session.data.id = "admin"
-            res.redirect('/chat')
+            req.session.data.name = user.name
+            req.session.data.id = user.userId
+            res.sendStatus(200)
         }
-    }
+    })
+    .catch((err) => {
+        console.log(err)
+        res.sendStatus(403)
+    })
+
 })
 
 type RegisterBody = {email: string, username: string, password: string}
 
-router.post('/register', (req: Request<{}, {}, RegisterBody>, res: Response) => {
-    prisma.user.create({
+router.post('/signup', async (req: Request<{}, {}, RegisterBody>, res: Response) => {
+    try{
+    let user = await prisma.user.findFirstOrThrow({
+        where: {
+            email: req.body.email
+        }
+    })
+    if(user !== null){
+        res.sendStatus(409)
+        return
+    }
+    await prisma.user.create({
         data: {
             userId: uuidv4(),
             email: req.body.email,
             name: req.body.username,
             password: req.body.password
         }
-    }).then(() => {
-        res.sendStatus(200)
-    }).catch((err) => {
-        console.log(err)
     })
+    res.sendStatus(200)
+    }
+    catch(err){
+        console.log(err)
+        res.sendStatus(500)
+    }
 })
 
 router.post('/logout', (req, res) => {
