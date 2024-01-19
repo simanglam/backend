@@ -1,5 +1,6 @@
 import { NextFunction, Router, Request, Response, request } from "express"
 import { PrismaClient } from '@prisma/client'
+import { send } from "process"
 
 const router = Router()
 const prisma = new PrismaClient()
@@ -32,6 +33,10 @@ router.post("/chatrooms", async (req, res) => {
 
 router.get('/chatrooms', async(req, res) => {
     if(req.session.data === undefined){ return}
+    if(req.session.data.login == false){
+        res.sendStatus(403)
+        return
+    }
     let data = await prisma.user.findMany({
         where: {
             userId: req.session.data.id
@@ -39,13 +44,14 @@ router.get('/chatrooms', async(req, res) => {
         select: {
             chatRooms: {
                 select: {
+                    id: true,
                     description: true,
                     name: true
                 }
             }
         }
     })
-    res.json(data)
+    res.json(data[0].chatRooms)
 })
 
 

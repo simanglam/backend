@@ -19,36 +19,30 @@ declare module 'express-session' {
   }
 
 var bodyParser = require('body-parser');
+import { CorsOptions } from 'cors';
 const app = express()
 const port: number = 4000
 const server = createServer(app)
-const io = initWebsocket(server)
-
-app.use(cors({
+const corsOptions: CorsOptions = {
     origin: 'http://localhost:3000', 
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
     allowedHeaders: 'X-Requested-With,content-type',
-}))
+};
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", 'http://localhost:3000');
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
-    next();
-});
-
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 app.use(session({
     secret: "我好像可以用中文當密鑰",
     resave: false,
     cookie: {
-        maxAge: 6000000
+        maxAge: 6000000,
+        sameSite: 'none',
     }
 }))
 app.use((req: Request, res: Response, next) => {
     if(req.session.data === undefined){
+        console.log("Session not found")
+        console.log(req.session.id)
         req.session.data = {
             login: false,
             name: "",
@@ -57,16 +51,14 @@ app.use((req: Request, res: Response, next) => {
     }
     next()
 })
+app.use(cors(corsOptions));
 app.use((req, res, next) => {
     console.log(`Request: ${req.method} ${req.url} at ${new Date().toLocaleString()} from ${req.ip} ${req.ips}`)
-    console.log(req.session)
-    console.log(req.session.id)
     next()
 })
 app.set('view engine', 'ejs')
 app.set('views', './src/views')
-
-app.use(express.static('static'))
+app.use("/static", express.static('./src/static'))
 app.use("/", main)
 app.use("/chat", chat)
 

@@ -27,10 +27,10 @@ router.post('/login', async (req, res) => {
             res.sendStatus(403)
         }
         else{
-            console.log("Sucessfully login")
             req.session.data.login = true
             req.session.data.name = user.name
             req.session.data.id = user.userId
+            req.session.save()
             res.sendStatus(200)
         }
     })
