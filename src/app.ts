@@ -7,7 +7,7 @@ import express, { Request, Response, ErrorRequestHandler, NextFunction } from 'e
 
 import initWebsocket from './ws'
 
-import chat from './router/chat/chat'
+import api from './router/chat/api'
 import main from './router/main/main'
 import data from './interface/session'
 
@@ -66,8 +66,8 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs')
 app.set('views', './src/views')
 app.use("/static", express.static('./src/static'))
-app.use("/", main)
-app.use("/chat", chat)
+app.use("/api", main)
+app.use("/api", api)
 
 let e: ErrorRequestHandler = (err, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack)
