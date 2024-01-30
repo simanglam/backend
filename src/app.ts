@@ -23,19 +23,22 @@ const app = express()
 const port: number = 4000
 const server = createServer(app)
 const corsOptions: CorsOptions = {
-    origin: 'http://localhost:3000', 
+    origin: true,
     credentials: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
-    allowedHeaders: 'X-Requested-With,content-type',
 };
+app.enable('trust proxy')
+app.set('trust proxy', 1)
 const sessionStore: Store = new MemoryStore({})
 const sessionMiddleware = session({
+    name: "Who Knows",
     secret: "我好像可以用中文當密鑰",
     resave: false,
     cookie: {
         maxAge: 600000,
-        sameSite: 'none',
+        secure: true,
+        sameSite: 'none'
     },
+    saveUninitialized: true,
     store: sessionStore
 })
 
@@ -56,6 +59,7 @@ app.use((req: Request, res: Response, next) => {
             room: ""
         }
     }
+    req.session.save()
     next()
 })
 app.use(cors(corsOptions));

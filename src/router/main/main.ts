@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { PrismaClient } from '@prisma/client'
-import session from 'express-session'
 const prisma = new PrismaClient()
 
 const router = Router()
@@ -45,7 +44,7 @@ type RegisterBody = {email: string, username: string, password: string}
 
 router.post('/signup', async (req: Request<{}, {}, RegisterBody>, res: Response) => {
     try{
-    let user = await prisma.user.findFirstOrThrow({
+    let user = await prisma.user.findFirst({
         where: {
             email: req.body.email
         }

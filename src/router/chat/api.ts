@@ -76,10 +76,11 @@ router.get('/chatroom/:id/messages', async(req, res) => {
                         }
                     },
                     createdAt: true,
-                    text: true
+                    text: true,
+                    id: true
                 },
                 orderBy: {
-                    createdAt: 'desc'
+                    createdAt: 'asc'
                 }
             }
         }
@@ -90,7 +91,8 @@ router.get('/chatroom/:id/messages', async(req, res) => {
     }
     req.session.data.room = req.params.id
     req.session.save()
-    res.json(data)
+    let json_data = data[0].messages.map((message) => {return {text: message.text, author: message.user?.name, created: message.createdAt, id: message.id}})
+    res.json(json_data)
 })
 
 router.post('/chatroom/:id/messages', async(req: Request<{id: string}, {text: string, createdAt: string}>, res) => {
@@ -105,7 +107,8 @@ router.post('/chatroom/:id/messages', async(req: Request<{id: string}, {text: st
             createdAt: req.body.createdAt,
             user: {
                 connect: {
-                    userId: req.session.data.id
+                    userId: req.session.data.id,
+                    name: req.session.data.name
                 }
             },
             chatRoom: {
@@ -115,12 +118,13 @@ router.post('/chatroom/:id/messages', async(req: Request<{id: string}, {text: st
             }
         }
     })
+    io.sockets.in(req.params.id).emit("chat message", JSON.stringify({text: req.body.text, author: req.session.data.name, created: req.body.created, id: req.session.data.id}))
     res.sendStatus(200)
 })
 
 router.post('/danger', (req, res) => {
     prisma.message.deleteMany(
-        { where: { user: {name: "Si manglam"}} })
+        { where: { user: {userId: "clrurv15p0000szzs2nq3r6lg"}} })
     res.sendStatus(200)
 })
 

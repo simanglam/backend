@@ -7,15 +7,11 @@ const prisma = new PrismaClient()
 export default (server: http.Server): Server => {
     const io = new Server(server, {
         allowEIO3: true,
-        cors: {
-            origin: 'http://localhost:3000', 
-            credentials: true, 
-            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
-            allowedHeaders: 'X-Requested-With,content-type'
-        }
     })
 
     io.on('connection', (socket) => {
+        
+        console.log(`New ws connection ${socket.id}`)
 
         socket.on('disconnect', () => {
             socket.disconnect()
@@ -62,7 +58,7 @@ export default (server: http.Server): Server => {
             if(nowRoom){
                 socket.leave(nowRoom)
             }
-
+            console.log(`${socket.id} join the room ${room}`)
             socket.join(room)
             socket.emit('room added', room)
         })
